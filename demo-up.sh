@@ -28,11 +28,16 @@ argocd app create argocd --repo https://github.com/spkane/poc-terraform-eks-argo
 argocd app sync argocd --async
 cd ../..
 
+# Let's install the shared emissary-ingress CRDs
+cd k8s/emissary-ingress-shared
+argocd app create emissary-ingress-shared --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress-shared/overlays/poc --dest-server https://kubernetes.default.svc
+argocd app sync emissary-ingress-shared --async
+cd ../..
+
 # Let's install emissary-ingress
-# CRDs will be via kubectl for now
-# The rest of the app will be via Argo CD & helm
 cd k8s/emissary-ingress
-argocd app create emissary-ingress --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress/overlays/poc --dest-namespace emissary-ingress --dest-server https://kubernetes.default.svc
+argocd app create emissary-ingress --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress/overlays/poc --dest-namespace emissary --dest-server https://kubernetes.default.svc
+argocd app sync emissary-ingress --async
 cd ../..
 
 # Let's open up the Argo CD web UI

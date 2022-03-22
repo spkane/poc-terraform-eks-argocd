@@ -5,4 +5,5 @@ commonLabels:
   environment: poc
 
 resources:
-- https://app.getambassador.io/yaml/emissary/2.2.2/emissary-crds.yaml
+- ../../base
+- https://app.getambassador.io/yaml/emissary/2.2.1/emissary-emissaryns.yaml
