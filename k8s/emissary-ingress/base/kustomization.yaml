@@ -6,4 +6,5 @@ commonLabels:
 namespace: emissary-ingress
 resources:
 - https://app.getambassador.io/yaml/emissary/2.2.2/emissary-crds.yaml
+- namespace.yaml
 - https://app.getambassador.io/yaml/emissary/2.2.2/emissary-emissaryns.yaml
