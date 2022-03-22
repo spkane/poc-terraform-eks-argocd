@@ -4,6 +4,7 @@ kind: Kustomization
 commonLabels:
   environment: poc
 
+namespace: emissary-staging
 resources:
 - ../../base
 - https://app.getambassador.io/yaml/emissary/2.2.1/emissary-emissaryns.yaml
