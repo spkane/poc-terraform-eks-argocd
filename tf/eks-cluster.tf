@@ -62,18 +62,10 @@ module "eks" {
       instance_type                   = "t2.small"
       additional_security_group_ids   = [aws_security_group.all_worker_mgmt.id]
       asg_desired_capacity            = 1
-    }
-    {
-      name                            = "istio-v1"
-      launch_template_name            = "istio-v1"
-      launch_template_use_name_prefix = true
-      instance_type                   = "t2.small"
-      additional_security_group_ids   = [aws_security_group.all_worker_mgmt.id]
-      asg_desired_capacity            = 1
     },
     {
-      name                            = "observability-v1"
-      launch_template_name            = "observability-v1"
+      name                            = "other-v1"
+      launch_template_name            = "other-v1"
       launch_template_use_name_prefix = true
       instance_type                   = "t2.small"
       additional_security_group_ids   = [aws_security_group.all_worker_mgmt.id]
