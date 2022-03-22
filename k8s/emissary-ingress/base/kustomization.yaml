@@ -3,7 +3,7 @@ kind: Kustomization
 commonLabels:
   package: emissary-ingress
 
+namespace: emissary
 resources:
-- https://app.getambassador.io/yaml/emissary/2.2.2/emissary-crds.yaml
 - namespace.yaml
 - https://app.getambassador.io/yaml/emissary/2.2.2/emissary-emissaryns.yaml
