@@ -7,7 +7,7 @@ commonLabels:
 namespace: argocd
 resources:
 - namespace.yaml
-- https://raw.githubusercontent.com/argoproj/argo-cd/v2.3.0/manifests/ha/install.yaml
+- https://raw.githubusercontent.com/argoproj/argo-cd/v2.3.1/manifests/install.yaml
 
 patches:
 - path: patch-configmap-argocd-cm.yaml
