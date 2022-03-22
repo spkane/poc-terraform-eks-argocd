@@ -1,0 +1,8 @@
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+data:
+  resource.compareoptions: |
+    # if ignoreAggregatedRoles set to true then differences caused by aggregated roles in RBAC resources are ignored.
+    ignoreAggregatedRoles: true
