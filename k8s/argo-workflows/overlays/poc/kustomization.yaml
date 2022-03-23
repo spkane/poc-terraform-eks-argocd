@@ -4,7 +4,15 @@ kind: Kustomization
 commonLabels:
   environment: poc
 
-namespace: argo
 resources:
 - ../../base
 - quick-start-postgres.yaml
+patches:
+- path: patch-configmap-argocd-cm.yaml
+  target:
+    kind: ConfigMap
+    labelSelector: app.kubernetes.io/name=argocd-cm
+- path: patch-service-argocd-server.yaml
+  target:
+    kind: Service
+    labelSelector: app.kubernetes.io/name=argocd-server

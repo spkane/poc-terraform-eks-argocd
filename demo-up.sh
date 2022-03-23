@@ -77,6 +77,11 @@ argocd app sync staging-emissary-ingress --async
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 open https://$(kubectl get svc argocd-server -n argocd --no-headers -o=custom-columns=LB:.status.loadBalancer.ingress[0].hostname)
 
+# Let's open up the Argo Workflows web UI 
+kubectl -n argo port-forward svc/argo-server 2746:2746 &> /dev/null & # This should be killed later
+sleep 2
+open https://https://127.0.0.1:2746/
+
 cd ..
 
 exit 0
