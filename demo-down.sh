@@ -5,20 +5,21 @@ set -euo pipefail
 # Force the AWS profile to use
 export AWS_PROFILE="so-personal"
 
-cd tf
-# Get the EKS cluster name and set the Kubernetes context
-terraform workspace select staging
+# Get the Staging EKS cluster name and set the Kuberetes context
+cd tf/eks/staging
 export STAGING_CLUSTER_NAME=$(terraform output -raw cluster_name)
 aws eks update-kubeconfig --name "$STAGING_CLUSTER_NAME"
+cd ../../..
 
 # Delete Apps directly (although we could use ArgoCD to do this)
 kubectl delete -k k8s/emissary-ingress/overlays/staging
 kubectl delete -k k8s/emissary-ingress-shared/overlays/staging
 
-terraform workspace select poc
+# Get the PoC EKS cluster name and set the Kuberetes context
+cd tf/eks/poc
 export POC_CLUSTER_NAME=$(terraform output -raw cluster_name)
 aws eks update-kubeconfig --name "$POC_CLUSTER_NAME"
-cd ..
+cd ../../..
 
 # Delete Apps directly (although we could use ArgoCD to do this)
 kubectl delete -k k8s/emissary-ingress/overlays/poc
@@ -29,15 +30,19 @@ kubectl delete -k k8s/argocd/overlays/poc
 # Unset the Kubernetes context
 kubectl config unset current-context
 
-cd tf
-# Tear down the EKS cluster and related resources
-terraform workspace select staging
+cd tf/eks/staging
+# Tear down the Staging EKS cluster and related resources
 terraform destroy -auto-approve
-terraform workspace delete staging
-terraform workspace select poc
+cd ../../..
+
+cd tf/eks/poc
+# Tear down the PoC EKS cluster and related resources
 terraform destroy -auto-approve
-terraform workspace delete poc
-cd ..
+cd ../../..
+
+cd tf/network
+# Tear down the PoC EKS cluster and related resources
+terraform destroy -auto-approve
+cd ../..
 
 exit 0
-

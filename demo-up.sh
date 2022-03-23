@@ -9,10 +9,10 @@ cd tf/network
 terraform init
 terraform apply -auto-approve
 terraform apply -refresh-only
-cd ..
+cd ../..
 
 # Spin up the PoC EKS cluster
-cd ./eks/poc
+cd tf/eks/poc
 terraform init
 terraform apply -auto-approve
 POC_CLUSTER_NAME=$(terraform output -raw cluster_name)
@@ -20,10 +20,10 @@ export POC_CLUSTER_NAME
 POC_ACCOUNT_NUMBER=$(aws sts get-caller-identity --query "Account" --output text)
 export POC_ACCOUNT_NUMBER
 aws eks update-kubeconfig --name "$POC_CLUSTER_NAME"
-cd ..
+cd ../../..
 
 # Spin up the Staging EKS cluster
-cd ./eks/staging
+cd tf/eks/staging
 terraform init
 terraform apply -auto-approve
 STAGING_CLUSTER_NAME=$(terraform output -raw cluster_name)
@@ -31,7 +31,7 @@ export STAGING_CLUSTER_NAME
 STAGING_ACCOUNT_NUMBER=$(aws sts get-caller-identity --query "Account" --output text)
 export STAGING_ACCOUNT_NUMBER
 aws eks update-kubeconfig --name "$STAGING_CLUSTER_NAME"
-cd ../..
+cd ../../..
 
 # Set the current Kubernetes context to the PoC cluster
 aws eks update-kubeconfig --name "$POC_CLUSTER_NAME"
@@ -49,9 +49,8 @@ argocd app create argocd --repo https://github.com/spkane/poc-terraform-eks-argo
 argocd app sync argocd --async
 
 # Let's install Argo Workflows
-argocd app create argoworkflows --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/argo-workflows/overlays/poc --dest-server https://kubernetes.default.svc
+argocd app create argo-workflows --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/argo-workflows/overlays/poc --dest-server https://kubernetes.default.svc
 argocd app sync argo-workflows --async
-
 
 # Let's install the shared emissary-ingress CRDs
 argocd app create emissary-ingress-shared --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress-shared/overlays/poc --dest-server https://kubernetes.default.svc
@@ -64,15 +63,15 @@ argocd app sync emissary-ingress --async
 ## Staging Cluster Setup
 
 # Add the staging cluster to ArgoCD in the PoC cluster
-argocd cluster add -y --in-cluster --name staging "arn:aws:eks:us-west-2:$STAGING_ACCOUNT_NUMBER:cluster/$STAGING_CLUSTER_NAME"
+argocd cluster add -y --name staging "arn:aws:eks:us-west-2:$STAGING_ACCOUNT_NUMBER:cluster/$STAGING_CLUSTER_NAME"
 
 # Let's install the shared emissary-ingress CRDs
-argocd app create emissary-ingress-shared --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress-shared/overlays/staging --dest-name staging
-argocd app sync emissary-ingress-shared --async
+argocd app create staging-emissary-ingress-shared --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress-shared/overlays/staging --dest-name staging
+argocd app sync staging-emissary-ingress-shared --async
 
 # Let's install emissary-ingress
-argocd app create emissary-ingress --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress/overlays/staging --dest-namespace emissary --dest-name staging
-argocd app sync emissary-ingress --async
+argocd app create staging-emissary-ingress --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress/overlays/staging --dest-namespace emissary --dest-name staging
+argocd app sync staging-emissary-ingress --async
 
 # Let's open up the Argo CD web UI
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
