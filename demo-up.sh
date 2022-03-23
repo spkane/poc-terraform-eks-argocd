@@ -38,7 +38,7 @@ cd ../..
 cd k8s/emissary-ingress
 argocd app create emissary-ingress --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress/overlays/poc --dest-namespace emissary --dest-server https://kubernetes.default.svc
 argocd app sync emissary-ingress --async
-argocd app create emissary-ingress-STAGING --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress/overlays/staging --dest-namespace emissary-staging --dest-server https://kubernetes.default.svc
+argocd app create emissary-ingress-staging --repo https://github.com/spkane/poc-terraform-eks-argocd --path k8s/emissary-ingress/overlays/staging --dest-namespace emissary-staging --dest-server https://kubernetes.default.svc
 argocd app sync emissary-ingress --async
 cd ../..
 
