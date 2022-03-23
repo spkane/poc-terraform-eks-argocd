@@ -6,27 +6,37 @@ set -euo pipefail
 export AWS_PROFILE="so-personal"
 
 cd tf
-
 # Get the EKS cluster name and set the Kubernetes context
-export DEMO_CLUSTER_NAME=$(terraform output -raw cluster_name)
-aws eks update-kubeconfig --name "$DEMO_CLUSTER_NAME"
+terraform workspace select staging
+export STAGING_CLUSTER_NAME=$(terraform output -raw cluster_name)
+aws eks update-kubeconfig --name "$STAGING_CLUSTER_NAME"
 
-# Login to ArgoCD
-argocd login $(kubectl get svc argocd-server -n argocd --no-headers -o=custom-columns=LB:.status.loadBalancer.ingress[0].hostname) --username admin --password $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo) --insecure
+# Delete Apps directly (although we could use ArgoCD to do this)
+kubectl delete -k k8s/emissary-ingress/overlays/staging
+kubectl delete -k k8s/emissary-ingress-shared/overlays/staging
 
-# Delete emissary-ingress
-argocd app delete -y emissary-ingress
-kubectl delete -f https://app.getambassador.io/yaml/emissary/2.2.2/emissary-crds.yaml
+terraform workspace select poc
+export POC_CLUSTER_NAME=$(terraform output -raw cluster_name)
+aws eks update-kubeconfig --name "$POC_CLUSTER_NAME"
+cd ..
 
-# Revert ArgoCD, so that it is no longer using an AWS Load Balancer
-# This prevents Terraform from getting stuck when it tears down the cluster.
-argocd app sync argocd
+# Delete Apps directly (although we could use ArgoCD to do this)
+kubectl delete -k k8s/emissary-ingress/overlays/poc
+kubectl delete -k k8s/emissary-ingress-shared/overlays/poc
+kubectl delete -k k8s/argo-workflows/overlays/poc
+kubectl delete -k k8s/argocd/overlays/poc
 
 # Unset the Kubernetes context
 kubectl config unset current-context
 
+cd tf
 # Tear down the EKS cluster and related resources
+terraform workspace select staging
 terraform destroy -auto-approve
+terraform workspace delete staging
+terraform workspace select poc
+terraform destroy -auto-approve
+terraform workspace delete poc
 cd ..
 
 exit 0

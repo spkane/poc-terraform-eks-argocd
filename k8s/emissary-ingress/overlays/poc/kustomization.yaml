@@ -7,4 +7,4 @@ commonLabels:
 namespace: emissary
 resources:
 - ../../base
-- https://app.getambassador.io/yaml/emissary/2.2.2/emissary-emissaryns.yaml
+- emissary-emissaryns.yaml

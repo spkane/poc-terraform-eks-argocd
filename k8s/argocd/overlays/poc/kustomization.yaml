@@ -6,7 +6,7 @@ commonLabels:
 
 resources:
 - ../../base
-- https://raw.githubusercontent.com/argoproj/argo-cd/v2.3.1/manifests/install.yaml
+- install.yaml
 
 patches:
 - path: patch-configmap-argocd-cm.yaml

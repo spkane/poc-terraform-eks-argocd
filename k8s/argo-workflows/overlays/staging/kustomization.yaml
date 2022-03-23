@@ -4,7 +4,6 @@ kind: Kustomization
 commonLabels:
   environment: staging
 
-namespace: emissary-staging
 resources:
 - ../../base
-- emissary-emissaryns.yaml
+- quick-start-postgres.yaml
