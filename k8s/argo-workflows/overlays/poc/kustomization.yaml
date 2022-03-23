@@ -4,6 +4,7 @@ kind: Kustomization
 commonLabels:
   environment: poc
 
+namespace: argo
 resources:
 - ../../base
 - quick-start-postgres.yaml

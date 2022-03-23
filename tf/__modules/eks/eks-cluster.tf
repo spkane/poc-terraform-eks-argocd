@@ -1,20 +1,17 @@
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+}
+
 locals {
-  cluster_name = "eks-poc-${random_string.suffix.result}"
+  cluster_name = "${var.cluster_name}-${random_string.suffix.result}"
 }
 
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "18.10.1"
   cluster_name    = local.cluster_name
-  cluster_tags    = {
-    architecture  = "thor"
-    domain        = "platform"
-    env           = "poc"
-    owner         = "the-a-team"
-    owner-contact = "mr-t@example.com"
-    product-line  = "shared"
-    team          = "a"
-  }
+  cluster_tags    = var.tags
   cluster_security_group_additional_rules = {
     egress_nodes_ephemeral_ports_tcp = {
       description                = "To node 1025-65535"
@@ -45,10 +42,10 @@ module "eks" {
     }
   }
 
-  cluster_version = "1.20"
-  subnet_ids      = module.vpc.private_subnets
+  cluster_version = var.cluster_version
+  subnet_ids      = var.private_subnet_ids
 
-  vpc_id = module.vpc.vpc_id
+  vpc_id = var.vpc_id
 
   eks_managed_node_group_defaults = {
     root_volume_type = "gp2"
@@ -72,4 +69,39 @@ module "eks" {
       asg_desired_capacity            = 1
     }
   ]
+}
+
+// Add tags to the VPC and subnets that is required for load balancer support
+resource "aws_ec2_tag" "vpc_tag" {
+  resource_id = var.vpc_id
+  key         = "kubernetes.io/cluster/${local.cluster_name}"
+  value       = "shared"
+}
+
+resource "aws_ec2_tag" "private_subnet_tag" {
+  for_each    = toset(var.private_subnet_ids)
+  resource_id = each.value
+  key         = "kubernetes.io/role/elb"
+  value       = "1"
+}
+
+resource "aws_ec2_tag" "private_subnet_cluster_tag" {
+  for_each    = toset(var.private_subnet_ids)
+  resource_id = each.value
+  key         = "kubernetes.io/cluster/${local.cluster_name}"
+  value       = "shared"
+}
+
+resource "aws_ec2_tag" "public_subnet_tag" {
+  for_each    = toset(var.public_subnet_ids)
+  resource_id = each.value
+  key         = "kubernetes.io/role/elb"
+  value       = "1"
+}
+
+resource "aws_ec2_tag" "public_subnet_cluster_tag" {
+  for_each    = toset(var.public_subnet_ids)
+  resource_id = each.value
+  key         = "kubernetes.io/cluster/${local.cluster_name}"
+  value       = "shared"
 }

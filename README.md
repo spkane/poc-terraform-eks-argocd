@@ -7,8 +7,12 @@
 
 **Note**: This a proof of concept and is not intended to be an example of best practices. It you are going to implement something like this in into your platform there are multiple things that you should consider:
 
-- [Using ArgoCD Application Sets](https://argocd-applicationset.readthedocs.io/en/stable/)
+- It is arguable that not having ArgoCD manage itself might avoid some classes of problems. You could just rely on kustomize for managing ArgoCD.
 - Determine if you want to rely on branches or Kustomize overlays for code promotion between environments.
+- Terraform modules should be version and pulled from a central git repo
+- Terraform state should be stored in a remote location that supports locks and versioning
+- [Using ArgoCD Application Sets](https://argocd-applicationset.readthedocs.io/en/stable/)
+- The scripts are not parallelized and are therefore slower then need be, but they are only here for flow documentation anyhow.
 - Automation
 - Security configuration
 - Storage configuration

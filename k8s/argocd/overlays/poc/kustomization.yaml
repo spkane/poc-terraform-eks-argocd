@@ -4,6 +4,7 @@ kind: Kustomization
 commonLabels:
   environment: poc
 
+namespace: argocd
 resources:
 - ../../base
 - install.yaml

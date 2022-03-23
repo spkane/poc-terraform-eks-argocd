@@ -4,6 +4,7 @@ kind: Kustomization
 commonLabels:
   environment: staging
 
+namespace: argocd
 resources:
 - ../../base
 - install.yaml

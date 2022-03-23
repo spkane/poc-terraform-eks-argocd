@@ -4,7 +4,7 @@ kind: Kustomization
 commonLabels:
   environment: staging
 
-namespace: emissary-staging
+namespace: emissary
 resources:
 - ../../base
 - emissary-emissaryns.yaml

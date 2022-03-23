@@ -1,6 +1,6 @@
 resource "aws_security_group" "all_worker_mgmt" {
-  name_prefix = "all_worker_management"
-  vpc_id      = module.vpc.vpc_id
+  name_prefix = "${local.cluster_name}_worker_mgmt"
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port        = 0

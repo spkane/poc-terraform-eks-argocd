@@ -4,6 +4,7 @@ kind: Kustomization
 commonLabels:
   environment: staging
 
+namespace: argo
 resources:
 - ../../base
 - quick-start-postgres.yaml
