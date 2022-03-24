@@ -45,7 +45,7 @@ spec:
           templates:
             - name: main
               container:
-                image: whalesay:latest
+                image: docker/whalesay:latest
 
   - name: approval-delay-15s
     #suspend: {}
@@ -96,7 +96,7 @@ spec:
         - name: username
         - name: random-number
     container:
-      image: whalesay:latest
+      image: docker/whalesay:latest
       command: ["bash","-c"]
       args: ["head -n 4 /text && cowsay {{inputs.parameters.salutation}} {{inputs.parameters.username}} - {{inputs.parameters.random-number}}"]
 
