@@ -1,0 +1,188 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: test-multistep-
+  namespace: argo
+  annotations:
+    workflows.argoproj.io/verify.py: |
+      assert status["phase"] == "Succeeded"
+spec:
+  securityContext:
+    runAsNonRoot: false
+  entrypoint: workflow
+  onExit: exit-handler
+  arguments:
+    parameters:
+      - name: salutation
+        value: Greetings
+      - name: username
+        value: Argonaut
+  templates:
+
+  - name: daemon-container
+    daemon: true
+    container:
+      image: ubuntu:latest
+      command: [bash, -c, "/usr/bin/sleep infinity"]
+      #readinessProbe:
+      #  httpGet:
+      #    path: /
+      #    port: 8080
+      #  initialDelaySeconds: 5
+      #  timeoutSeconds: 1
+
+  - name: k8s-owner-reference
+    resource:
+      action: create
+      setOwnerReference: true
+      manifest: |
+        apiVersion: argoproj.io/v1alpha1
+        kind: Workflow
+        metadata:
+          generateName: owned-eg-
+        spec:
+          entrypoint: main
+          templates:
+            - name: main
+              container:
+                image: whalesay:latest
+
+  - name: approval-delay-15s
+    #suspend: {}
+    suspend:
+      duration: "15"
+
+  - name: delay-5s
+    suspend:
+      duration: "5"
+
+  - name: greeting
+    inputs:
+      parameters:
+        - name: salutation
+    script:
+      image: python:latest
+      command: [python]
+      source: |
+        salutation = '{{inputs.parameters.salutation}}'
+        print(f'{salutation},')
+  - name: user
+    inputs:
+      parameters:
+        - name: username
+    script:
+      image: ubuntu:latest
+      command: [/bin/sh]
+      source: |
+        echo "{{inputs.parameters.username}}!"
+  - name: random-fail
+    retryStrategy:
+      limit: 10
+    container:
+      image: python:latest
+      command: [python3.6, -c]
+      # fail with a 66% probability
+      args: ["import random; import sys; print('retries: {{retries}}'); exit_code = random.choice([0, 1, 1]); sys.exit(exit_code)"]
+  - name: whalesay
+    inputs:
+      artifacts:
+      - name: helm-index
+        path: /text
+        mode: 0755
+        http:
+          url: https://helm.superorbital.io/index.yaml
+      parameters:
+        - name: salutation
+        - name: username
+        - name: random-number
+    container:
+      image: whalesay:latest
+      command: ["bash","-c"]
+      args: ["head -n 4 /text && cowsay {{inputs.parameters.salutation}} {{inputs.parameters.username}} - {{inputs.parameters.random-number}}"]
+
+  # exit handler related templates
+  # After the completion of the entrypoint template, the status of the
+  # workflow is made available in the global variable {{workflow.status}}.
+  # {{workflow.status}} will be one of: Succeeded, Failed, Error
+  - name: exit-handler
+    steps:
+    - - name: notify
+        template: send-email
+      - name: celebrate
+        template: celebrate
+        when: "{{workflow.status}} == Succeeded"
+      - name: cry
+        template: cry
+        when: "{{workflow.status}} != Succeeded"
+  - name: send-email
+    container:
+      image: ubuntu:latest
+      command: [sh, -c]
+      # Tip: {{workflow.failures}} is a JSON list. If you're using bash to read it, we recommend using jq to manipulate
+      # it. For example:
+      #
+      # echo "{{workflow.failures}}" | jq -r '.[] | "Failed Step: \(.displayName)\tMessage: \(.message)"'
+      #
+      # Will print a list of all the failed steps and their messages. For more info look up the jq docs.
+      # Note: jq is not installed by default on the "alpine:latest" image, however it can be installed with "apk add jq"
+      args: ["echo send e-mail: {{workflow.name}} {{workflow.status}}. Failed steps {{workflow.failures}}"]
+  - name: celebrate
+    container:
+      image: ubuntu:latest
+      command: [sh, -c]
+      args: ["echo hooray!"]
+  - name: cry
+    container:
+      image: ubuntu:latest
+      command: [sh, -c]
+      args: ["echo boohoo!"]
+
+  - name: workflow
+    steps:
+    - - name: daemon-container
+        template: daemon-container
+    - - name: get-greeting
+        template: greeting
+        arguments:
+          parameters:
+            - name: salutation
+              value: "{{workflow.parameters.salutation}}"
+      - name: get-title
+        template: user
+        arguments:
+          parameters:
+            - name: username
+              value: "{{workflow.parameters.username}}"
+      - name: call-random-number-generator
+        templateRef: 
+          name: random-number-generator
+          template: generator
+        arguments:
+          parameters:
+            - name: min
+              value: 1
+            - name: max
+              value: 100
+
+    - - name: approval-delay-15s
+        template: approval-delay-15s
+
+    - - name: delay-5s
+        template: delay-5s
+      - name: retry-failure
+        template: random-fail
+
+    - - name: release
+        template: whalesay
+        arguments:
+          parameters:
+            - name: salutation
+              value: "{{steps.get-greeting.outputs.result}}"
+            - name: username
+              value: "{{steps.get-title.outputs.result}}"
+            - name: random-number
+              value: "{{steps.call-random-number-generator.outputs.result}}"
+
+    - - name: k8s-owner-reference
+        template: k8s-owner-reference
+

@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: hello-world
+  namespace: argo
+spec:
+  schedule: "0 */6 * * *"
+  timezone: "America/Los_Angeles"
+  startingDeadlineSeconds: 0
+  concurrencyPolicy: "Replace"
+  successfulJobsHistoryLimit: 4
+  failedJobsHistoryLimit: 4
+  suspend: false
+  workflowSpec:
+    entrypoint: whalesay
+    templates:
+      - name: whalesay
+        container:
+          image: whalesay:latest
+          command: [cowsay]
+          args: ["Hello world! I was born on {{workflow.scheduledTime}}"]

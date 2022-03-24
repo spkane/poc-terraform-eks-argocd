@@ -3992,7 +3992,7 @@ spec:
       serviceAccountName: emissary-apiext
       containers:
         - name: emissary-apiext
-          image: docker.io/emissaryingress/emissary:2.2.2
+          image: docker.io/emissaryingress/emissary:2.2.1
           imagePullPolicy: IfNotPresent
           command: [ "apiext", "emissary-apiext" ]
           ports:
